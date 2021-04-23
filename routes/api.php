@@ -45,6 +45,10 @@ Route::group(['prefix'=>'v1','middleware'=>['auth:api']],function () {
     Route::post('/user/logout', [ApiControllerAuth::class, 'logout']);
 	// -----------------------------------------------------------------------------------------------------------------------------
     Route::resource('plotting', ApiControllerPlotting::class, ['except' => ['create', 'edit', 'update', 'destroy']]);
+	Route::post('/plotting/upload', [ApiControllerPlotting::class, 'uploadFormExcel']);
+	Route::get('/checkFormPlot', [ApiControllerPlotting::class, 'check']);
+	Route::get('/downloadFormPlot', [ApiControllerPlotting::class, 'download']);
+	Route::get('/deleteFormPlot', [ApiControllerPlotting::class, 'delete']);
 	// -----------------------------------------------------------------------------------------------------------------------------
     Route::resource('informasi', ApiControllerInformasi::class, ['except' => ['create', 'edit', 'update', 'destroy']]);
     Route::post('/informasi/update/{informasi}', [ApiControllerInformasi::class, 'update']);
@@ -53,7 +57,8 @@ Route::group(['prefix'=>'v1','middleware'=>['auth:api']],function () {
     // -----------------------------------------------------------------------------------------------------------------------------
     Route::resource('mahasiswa', ApiControllerMahasiswa::class, ['except' => ['create', 'edit', 'update', 'destroy']]);
     Route::post('/mahasiswa/update/{mahasiswa}', [ApiControllerMahasiswa::class, 'update']);
-    Route::post('/mahasiswa/update/judul/{mahasiswa}', [ApiControllerMahasiswa::class, 'updateJudulMahasiswa']);
+    Route::post('/mahasiswa/update/skta/{mahasiswa}', [ApiControllerMahasiswa::class, 'updateSKMahasiswa']);
+    Route::post('/mahasiswa/update/pembimbing/{mahasiswa}', [ApiControllerMahasiswa::class, 'addPembimbing']);
     Route::post('/mahasiswa/delete/{mahasiswa}', [ApiControllerMahasiswa::class, 'destroy']);
     // -----------------------------------------------------------------------------------------------------------------------------
     Route::resource('dosen', ApiControllerDosen::class, ['except' => ['create', 'edit', 'update', 'destroy']]);

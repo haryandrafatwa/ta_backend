@@ -1,14 +1,16 @@
 <?php
 
 namespace App\Http\Controllers\ApiController;
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\ApiController\BaseController as BaseController;
 use Illuminate\Http\Request;
 use App\Models\mahasiswa;
 use App\Models\user;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Carbon\Carbon;
 
-class ApiControllerMahasiswa extends Controller
+class ApiControllerMahasiswa extends BaseController
 {
     /**
      * Display a listing of the resource.
@@ -17,6 +19,11 @@ class ApiControllerMahasiswa extends Controller
      */
     public function index()
     {
+		
+		mahasiswa::where('sk_expired','<',Carbon::now())
+		->where('sk_status',2)
+		->update(['sk_status'=>3]);
+		
         $response = DB::table('mahasiswa')
         ->leftjoin('plotting', 'plotting.id', '=', 'mahasiswa.plot_id')
 		->orderBy('mhs_nama','ASC')
@@ -223,24 +230,35 @@ class ApiControllerMahasiswa extends Controller
 
     }
 
-    public function updateJudulMahasiswa(Request $request, $id) {
+    public function updateSKMahasiswa(Request $request, $id) {
 
         $mahasiswa = mahasiswa::find($id);
         
-        $requestJudulId = $request->judul_id;
+		$request->validate([
+			'file' => 'required|mimes:pdf|max:1024',
+		]);
 
-        if($requestJudulId==0) {
-            $mahasiswa->judul_id = null;
-        } else {
-            $mahasiswa->judul_id = $requestJudulId;
-        }
+        $fileName = $id.'_sk_ta.'.$request->file->extension();  
+		
+		if($mahasiswa->sk_expired != null){
+            Storage::delete('skta/'.$mahasiswa->mhs_nim.'/'.$fileName);
+		}
+		
+        // $request->file->move(public_path('uploads'), $fileName);
+		Storage::disk('local')->put('skta/'.$mahasiswa->mhs_nim.'/'.$fileName, file_get_contents($request->file));
+		
+		$carbon = new Carbon($mahasiswa->sk_expired);
+		$newSkExpired = $carbon->addMonth(6);
+
+        $mahasiswa->sk_expired = $newSkExpired;
+		$mahasiswa->sk_status = 2;
 
         if (!$mahasiswa->save()) {
             $response = "Sesuatu eror terjadi";
-            $showMahasiswa = "Gagal merubah dosen";  
+            $showMahasiswa = "Gagal update SK TA";  
             return response()->json($response, 404); 
         } else {
-            $showMahasiswa = "berhasil merubah data mahasiswa";
+            $showMahasiswa = "Berhasil update SK TA.";
         }
 
         $response = [
@@ -250,5 +268,28 @@ class ApiControllerMahasiswa extends Controller
         return response()->json($response, 201);
 
     }
+	
+	public function addPembimbing(Request $request,$mhs_nim){
+		
+		$mahasiswa = mahasiswa::find($mhs_nim);
+		$request->validate([
+			'plot_id' => 'required'
+		]);
+		
+		$mahasiswa->plot_id = $request->plot_id;
+		if (!$mahasiswa->save()) {
+            $response = "Sesuatu eror terjadi";
+            $showMahasiswa = "Gagal tambah pembimbing";  
+            return response()->sendError($response);
+        } else {
+            $showMahasiswa = "Berhasil tambah pembimbing.";
+        }
+		$response = [
+            'mahasiswa' => $showMahasiswa
+        ];
+
+        return $this->sendResponse($response,'Add pembimbing successfully.');
+		
+	}
 
 }
