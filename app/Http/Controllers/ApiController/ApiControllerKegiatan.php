@@ -5,7 +5,7 @@ namespace App\Http\Controllers\ApiController;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\jadwal_kegiatan;
-
+use Carbon\Carbon;
 
 class ApiControllerKegiatan extends Controller
 {
@@ -39,23 +39,19 @@ class ApiControllerKegiatan extends Controller
     public function store(Request $request)
     {
         $this->validate($request, [
-            'kegiatan' => 'required',
+            'nama_kegiatan' => 'required',
             'tanggal_mulai' => 'required',
             'tanggal_berakhir' => 'required'
         ]);
 
-        $kegiatan = $request->kegiatan;
+        $kegiatan = $request->nama_kegiatan;
         $tanggal_mulai = $request->tanggal_mulai;
         $tanggal_berakhir = $request->tanggal_berakhir;
-        $pelaku = $request->pelaku;
-        $keterangan = $request->keterangan;
 
         $jadwal_kegiatan = new jadwal_kegiatan();
-        $jadwal_kegiatan->kegiatan = $kegiatan;
-        $jadwal_kegiatan->tanggal_mulai = $tanggal_mulai;
-        $jadwal_kegiatan->tanggal_berakhir = $tanggal_berakhir;
-        $jadwal_kegiatan->pelaku = $pelaku;
-        $jadwal_kegiatan->keterangan = $keterangan;
+        $jadwal_kegiatan->nama_kegiatan = $kegiatan;
+        $jadwal_kegiatan->tanggal_berakhir = Carbon::parse($tanggal_berakhir)->format('Y-m-d H:i:s');
+        $jadwal_kegiatan->tanggal_mulai = Carbon::parse($tanggal_mulai)->format('Y-m-d H:i:s');
 
         if (!$jadwal_kegiatan->save()) {
             $response = [
@@ -83,6 +79,13 @@ class ApiControllerKegiatan extends Controller
         $response = jadwal_kegiatan::find($id);
         return response()->json($response, 201);
     }
+	
+	public function getByLike($like){
+		$response = jadwal_kegiatan::where('nama_kegiatan','LIKE','%'.$like.'%')
+		->orderBy('kegiatan_id','DESC')
+		->get();
+        return response()->json($response, 201);
+	}
 
     /**
      * Show the form for editing the specified resource.

@@ -13,10 +13,10 @@ class jadwal_kegiatan extends Model
 
     protected $fillable = [
         'kegiatan_id', 
-        'kegiatan',
+        'nama_kegiatan',
         'tanggal_mulai', 
         'tanggal_berakhir', 
-        'pelaku', 
-        'keterangan',
+        // 'pelaku', 
+        // 'keterangan',
         ];
 }

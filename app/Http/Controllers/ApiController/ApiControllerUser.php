@@ -3,7 +3,11 @@
 namespace App\Http\Controllers\ApiController;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use App\Models\user;
+use App\Models\dosen;
+use App\Models\mahasiswa;
+use App\Models\koordinator;
 
 class ApiControllerUser extends Controller
 {
@@ -17,6 +21,19 @@ class ApiControllerUser extends Controller
         $response = user::all();
         return response()->json($response, 201);
     }
+	
+	public function getCurrent(){
+		$response = user::find(Auth::id());
+		if($response->pengguna == 'mahasiswa'){
+			$data = mahasiswa::find($response->username);
+		}else if($response->pengguna == 'dosen'){
+			$data = dosen::find($response->username);
+		}else{
+			$data = koordinator::where('username',$response->username)->first();
+		}
+		$response['data'] = $data;
+        return response()->json($response, 201);
+	}
 
     /**
      * Show the form for creating a new resource.

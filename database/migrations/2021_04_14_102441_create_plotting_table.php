@@ -16,10 +16,10 @@ class CreatePlottingTable extends Migration
         Schema::create('plotting', function (Blueprint $table) {
 			$table->engine = 'InnoDB';
             $table->id();
-            $table->string("nip_pembimbing_1");
-            $table->string("nip_pembimbing_2");
-            $table->foreign('nip_pembimbing_1')->references('dsn_nip')->on('dosen')->onDelete('cascade')->onUpdate('cascade');
-            $table->foreign('nip_pembimbing_2')->references('dsn_nip')->on('dosen')->onDelete('cascade')->onUpdate('cascade');
+            $table->string("nip_dosen_1");
+            $table->string("nip_dosen_2");
+            $table->foreign('nip_dosen_1')->references('dsn_nip')->on('dosen')->onDelete('cascade')->onUpdate('cascade');
+            $table->foreign('nip_dosen_2')->references('dsn_nip')->on('dosen')->onDelete('cascade')->onUpdate('cascade');
         });
     }
 

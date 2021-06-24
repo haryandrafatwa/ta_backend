@@ -21,13 +21,14 @@ class CreateMahasiswaTable extends Migration
             $table->string("mhs_kontak")->unique()->nullable();
             $table->string("mhs_foto");
             $table->string("mhs_email")->unique()->nullable();
-            $table->unsignedBigInteger("plot_id")->nullable();
-            $table->timestamp("sk_expired")->nullable();
-            $table->smallInteger("sk_status")->default(1);
+            $table->string("judul")->nullable();
+            $table->string("judul_inggris")->nullable();
+            $table->unsignedBigInteger("plot_pembimbing")->nullable();
+            $table->unsignedBigInteger("plot_penguji")->nullable();
             $table->string("username");
             $table->foreign('username')->references('username')->on('users')->onDelete('cascade')->onUpdate('cascade');
-            $table->foreign('plot_id')->references('id')->on('plotting')->onDelete('cascade')->onUpdate('cascade');
-            $table->foreign('sk_status')->references('id')->on('sk_status')->onDelete('cascade')->onUpdate('cascade');
+            $table->foreign('plot_pembimbing')->references('id')->on('plotting')->onDelete('cascade')->onUpdate('cascade');
+            $table->foreign('plot_penguji')->references('id')->on('plotting')->onDelete('cascade')->onUpdate('cascade');
         });
     }
 

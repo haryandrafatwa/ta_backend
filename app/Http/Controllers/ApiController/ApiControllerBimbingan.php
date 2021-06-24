@@ -5,9 +5,13 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\bimbingan;
-use App\Models\proyek_akhir;
 use App\Models\mahasiswa;
-use App\Models\judul;
+use App\Models\plotting;
+use App\Models\dosen;
+use App\Models\user;
+use App\Models\sidang;
+use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class ApiControllerBimbingan extends Controller
 {
@@ -17,20 +21,30 @@ class ApiControllerBimbingan extends Controller
      * @return \Illuminate\Http\Response
      */
 
-    public $arrayResponse = [
-                            'proyek_akhir.mhs_nim AS mhs_nim',
-                            'mahasiswa.mhs_nama AS mhs_nama',
-                            'mahasiswa.mhs_foto AS mhs_foto',
-                            'judul.judul_nama AS judul_nama',
-                            'proyek_akhir.nama_tim AS nama_tim'
-                             ];
-
     public function index()
     {
-
-        $response = DB::table('bimbingan')
-        ->join('proyek_akhir', 'proyek_akhir.proyek_akhir_id', '=', 'bimbingan.proyek_akhir_id')
-        ->get();
+		$user = user::find(Auth::id());
+		if($user->pengguna == 'mahasiswa'){
+			$mhs = mahasiswa::find(Auth::id());
+			$plot = plotting::find($mhs->plot_pembimbing);
+			$dosen1 = dosen::find($plot->nip_dosen_1);
+			$dosen2 = dosen::find($plot->nip_dosen_2);
+			$response = ['mahasiswa'=>$mhs,'dosenPembimbing1'=>$dosen1,'dosenPembimbing2'=>$dosen2];
+		}else{
+			$dosen = dosen::find(Auth::id());
+			$plots = plotting::where("nip_dosen_1",Auth::id())->orWhere("nip_dosen_2",Auth::id())->get();
+			$mahasiswas = [];
+			foreach($plots as $plot){
+				$mahasiswa= mahasiswa::where("plot_pembimbing",$plot->id)->get();
+				foreach($mahasiswa as $mhs){
+					$bimbingan = bimbingan::where("mhs_nim",$mhs->username)->where("dsn_nip",Auth::id())->get();
+					$sum = count($bimbingan);
+					$mhs["bimbingan_sum"] = $sum;
+					array_push($mahasiswas,$mhs);
+				}
+			}
+			$response = ['dosen'=>$dosen,'mahasiswa'=>$mahasiswas];
+		}
 
         return response()->json($response, 201);
     }
@@ -55,10 +69,10 @@ class ApiControllerBimbingan extends Controller
     {
         $bimbingan = new bimbingan();
         $bimbingan->bimbingan_review = $request->bimbingan_review;
-        $bimbingan->bimbingan_tanggal = $request->bimbingan_tanggal;
-        $bimbingan->bimbingan_kehadiran = $request->bimbingan_kehadiran;
-        $bimbingan->bimbingan_status = $request->bimbingan_status;
-        $bimbingan->proyek_akhir_id = $request->proyek_akhir_id;
+        $bimbingan->bimbingan_tanggal = Carbon::parse($request->bimbingan_tanggal)->format('Y-m-d H:i:s');
+        $bimbingan->bimbingan_status = "pending";
+        $bimbingan->dsn_nip = $request->dsn_nip;
+        $bimbingan->mhs_nim = Auth::id();
 
         if (!$bimbingan->save()) {
             $response = [
@@ -84,12 +98,43 @@ class ApiControllerBimbingan extends Controller
      */
     public function show($id)
     {
-        
-        $response = DB::table('bimbingan')
-        ->join('proyek_akhir', 'proyek_akhir.proyek_akhir_id', '=', 'bimbingan.proyek_akhir_id')
-        ->where('bimbingan_id', $id)
-        ->get();
-        
+		$user = user::find(Auth::id());
+		if($user->pengguna == 'mahasiswa'){
+			$mhs = mahasiswa::find(Auth::id());
+			$dosen = dosen::find($id);
+			$sidang = sidang::where('mhs_nim',Auth::id())->first();
+			$bimbingan = bimbingan::where("dsn_nip",$id)->where("mhs_nim",Auth::id())->get();
+			$pending = bimbingan::where("dsn_nip",$id)->where("mhs_nim",Auth::id())->where("bimbingan_status","pending")->get();
+			$sum = count($bimbingan);
+			$sumPending = count($pending);
+			$mhs["bimbingan_sum"] = $sum;
+			$mhs["pending_sum"] = $sumPending;
+			$mhs["sidang_status"] = $sidang->sidang_status;
+			$mhs["sidang_tanggal"] = $sidang->sidang_tanggal;
+			$response = [
+				"mahasiswa" => $mhs,
+				"dosen" => $dosen,
+				"bimbingan" => $bimbingan,
+			];
+		}else{
+			$dosen = dosen::find(Auth::id());
+			$mhs = mahasiswa::find($id);
+			$sidang = sidang::where('mhs_nim',$id)->first();
+			$bimbingan = bimbingan::where("dsn_nip",Auth::id())->where("mhs_nim",$id)->get();
+			$pending = bimbingan::where("dsn_nip",Auth::id())->where("mhs_nim",$id)->where("bimbingan_status","pending")->get();
+			$sum = count($bimbingan);
+			$sumPending = count($pending);
+			$mhs["bimbingan_sum"] = $sum;
+			$mhs["pending_sum"] = $sumPending;
+			$mhs["sidang_status"] = $sidang->sidang_status;
+			$mhs["sidang_tanggal"] = $sidang->sidang_tanggal;
+			$response = [
+				"dosen" => $dosen,
+				"mahasiswa" => $mhs,
+				"bimbingan" => $bimbingan,
+			];
+		}
+		
         return response()->json($response, 201);
     }
 
@@ -116,7 +161,7 @@ class ApiControllerBimbingan extends Controller
         
         $bimbingan = bimbingan::find($id);
         $bimbingan->bimbingan_review = $request->bimbingan_review;
-        $bimbingan->bimbingan_tanggal = $request->bimbingan_tanggal;
+        $bimbingan->bimbingan_tanggal = Carbon::parse($request->bimbingan_tanggal)->format('Y-m-d H:i:s');
 
         if (!$bimbingan->save()) {
             $response = [

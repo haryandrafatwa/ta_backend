@@ -3,17 +3,17 @@
 namespace Database\Factories;
 
 use Carbon\Carbon;
-use App\Models\mahasiswa;
+use App\Models\skta;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-class mahasiswaFactory extends Factory
+class sktaFactory extends Factory
 {
     /**
      * The name of the factory's corresponding model.
      *
      * @var string
      */
-    protected $model = mahasiswa::class;
+    protected $model = skta::class;
 
     /**
      * Define the model's default state.
@@ -24,8 +24,7 @@ class mahasiswaFactory extends Factory
     {
         return [
             //
-			'mhs_nama' => $this->faker->unique()->name,
-            'mhs_foto' => 'default-mahasiswa.jpg',
+			'sk_status' => 1,
         ];
     }
 }

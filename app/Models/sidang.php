@@ -14,16 +14,16 @@ class sidang extends Model
         'sidang_id', 
         'sidang_review',
         'sidang_tanggal', 
-        'nilai_proposal', 
         'nilai_penguji_1', 
         'nilai_penguji_2', 
-        'nilai_pembimbing', 
+        'nilai_pembimbing_1', 
+        'nilai_pembimbing_2', 
         'nilai_total', 
         'sidang_status',
-        'proyek_akhir_id',
+        'mhs_nim',
         ];
 
-    public function tbl_proyek_akhir(){
-        return $this->belongsTo('App\Models\proyek_akhir', 'proyek_akhir_id');
+    public function tbl_mhs(){
+        return $this->belongsTo('App\Models\mahasiswa', 'username');
     }
 }

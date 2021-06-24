@@ -1,14 +1,17 @@
 <?php
 
 namespace App\Http\Controllers\ApiController;
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\ApiController\BaseController as BaseController;
+use Illuminate\Http\Request;
 use App\Models\koordinator;
 use App\Models\user;
+use App\Models\mahasiswa;
+use App\Models\skta;
+use App\Models\sidang;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
-use Illuminate\Http\Request;
-
-class ApiControllerKoor extends Controller
+class ApiControllerKoor extends BaseController
 {
     /**
      * Display a listing of the resource.
@@ -210,4 +213,5 @@ class ApiControllerKoor extends Controller
         return response()->json($response, 201);;
 
     }
+	
 }

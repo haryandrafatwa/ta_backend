@@ -20,6 +20,8 @@ class CreateDosenTable extends Migration
             $table->string('dsn_kode')->unique();
             $table->string('dsn_kontak')->unique()->nullable();
             $table->string('dsn_email')->unique()->nullable();
+            $table->integer('kuota_bimbingan')->default(15);
+            $table->integer('kuota_reviewer')->default(5);
             $table->text('dsn_foto');
             $table->string('username');
             $table->timestamps();

@@ -12,6 +12,7 @@ class dosen extends Model
     protected $primaryKey = "dsn_nip";
     protected $keyType = 'string';
 	use HasFactory;
+	protected $hidden = ['created_at','updated_at'];
 
     protected $fillable = [
         'dsn_nip', 

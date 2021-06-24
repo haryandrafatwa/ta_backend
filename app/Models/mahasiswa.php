@@ -24,22 +24,21 @@ class mahasiswa extends Model
         'mhs_foto',
         'mhs_email',
         'plot_id',
-        'sk_id',
         'username',
         ];
 
 
-    public function tbl_plotting()
+    public function plotting()
     {
-        return $this->belongsTo('App\Models\plotting', 'id');
+        return $this->hasOne('App\Models\plotting','id');
     }
 	
-	public function tbl_sk()
+	public function skta()
     {
-        return $this->belongsTo('App\Models\sk_ta', 'id');
+        return $this->hasOne('App\Models\skta','mhs_nim');
     }
-
-    public function tbl_user()
+	
+    public function user()
     {
         return $this->hasOne('App\Models\user', 'username');
     }

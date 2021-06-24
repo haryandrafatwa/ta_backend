@@ -13,6 +13,7 @@ class koordinator extends Model
     protected $primaryKey = "koor_nip";
     protected $keyType = 'string';
 	use HasFactory;
+	protected $hidden = ['created_at','updated_at'];
 
     protected $fillable = [
         'koor_nip', 

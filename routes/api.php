@@ -13,6 +13,7 @@ use App\Http\Controllers\ApiController\ApiControllerMonev;
 use App\Http\Controllers\ApiController\ApiControllerMonevDetail;
 use App\Http\Controllers\ApiController\ApiControllerNotifikasi;
 use App\Http\Controllers\ApiController\ApiControllerProyekAkhir;
+use App\Http\Controllers\ApiController\ApiControllerProfile;
 use App\Http\Controllers\ApiController\ApiControllerSidang;
 use App\Http\Controllers\ApiController\ApiControllerUser;
 use App\Http\Controllers\ApiController\ApiControllerPlotting;
@@ -43,9 +44,14 @@ Route::group(['prefix'=>'v1'],function () {
 
 Route::group(['prefix'=>'v1','middleware'=>['auth:api']],function () {
     Route::post('/user/logout', [ApiControllerAuth::class, 'logout']);
+    Route::get('/user/', [ApiControllerUser::class, 'getCurrent']);
 	// -----------------------------------------------------------------------------------------------------------------------------
     Route::resource('plotting', ApiControllerPlotting::class, ['except' => ['create', 'edit', 'update', 'destroy']]);
 	Route::post('/plotting/upload', [ApiControllerPlotting::class, 'uploadFormExcel']);
+    Route::post('/plotting/delete/{plotting}', [ApiControllerPlotting::class, 'destroy']);
+    Route::post('/plotting/update/{plotting}', [ApiControllerPlotting::class, 'update']);
+    Route::get('/plotting/pembimbing/{plotting}', [ApiControllerPlotting::class, 'getPembimbing']);
+    Route::get('/plotting/penguji/{plotting}', [ApiControllerPlotting::class, 'getPenguji']);
 	Route::get('/checkFormPlot', [ApiControllerPlotting::class, 'check']);
 	Route::get('/downloadFormPlot', [ApiControllerPlotting::class, 'download']);
 	Route::get('/deleteFormPlot', [ApiControllerPlotting::class, 'delete']);
@@ -60,15 +66,27 @@ Route::group(['prefix'=>'v1','middleware'=>['auth:api']],function () {
     Route::post('/mahasiswa/update/skta/{mahasiswa}', [ApiControllerMahasiswa::class, 'updateSKMahasiswa']);
     Route::post('/mahasiswa/update/pembimbing/{mahasiswa}', [ApiControllerMahasiswa::class, 'addPembimbing']);
     Route::post('/mahasiswa/delete/{mahasiswa}', [ApiControllerMahasiswa::class, 'destroy']);
+    Route::post('/mahasiswa/upload/pengajuan/perpanjangSK/{mahasiswa}', [ApiControllerMahasiswa::class, 'perpanjangSKTA']);
+    Route::post('/mahasiswa/delete/pembimbing/{mahasiswa}', [ApiControllerMahasiswa::class, 'deletePembimbing']);
+    Route::get('/askSidang', [ApiControllerMahasiswa::class, 'askSidangTerjadwal']);
+    Route::post('/konfirmasiSidang', [ApiControllerMahasiswa::class, 'konfirmasiSidang']);
+    Route::get('/mahasiswa/download/skta/{mahasiswa}', [ApiControllerMahasiswa::class, 'downloadSKTA']);
+    Route::post('/uploadFormSidang', [ApiControllerMahasiswa::class, 'uploadFormSidang']);
     // -----------------------------------------------------------------------------------------------------------------------------
-    Route::resource('dosen', ApiControllerDosen::class, ['except' => ['create', 'edit', 'update', 'destroy']]);
+    // Route::resource('dosen', ApiControllerDosen::class, ['except' => ['create', 'edit', 'update', 'destroy']]);
+    Route::get('/dosen/all/', [ApiControllerDosen::class, 'index']);
+    Route::post('/dosen', [ApiControllerDosen::class, 'store']);
+    Route::get('/dosen', [ApiControllerDosen::class, 'getCurrent']);
+    Route::get('/dosen/{dosen}', [ApiControllerDosen::class, 'show']);
+    Route::get('/dosen/mahasiswa/sidang', [ApiControllerDosen::class, 'getMahasiswaSidang']);
+    Route::get('/dosen/mahasiswa/sidang/{dosen}', [ApiControllerDosen::class, 'getMahasiswaSidangByNIM']);
     Route::post('/dosen/update/{dosen}', [ApiControllerDosen::class, 'update']);
     Route::post('/dosen/update/pure/{dosen}', [ApiControllerDosen::class, 'updatePure']);
     Route::post('/dosen/delete/{dosen}', [ApiControllerDosen::class, 'destroy']);
     // -----------------------------------------------------------------------------------------------------------------------------
     Route::resource('koor', ApiControllerKoor::class, ['except' => ['create', 'edit', 'update', 'destroy']]);
-    Route::post('/koor/update/{koor}', ['uses' => 'ApiController\ApiControllerKoor@update']);
-    Route::post('/koor/delete/{koor}', ['uses' => 'ApiController\ApiControllerKoor@destroy']);
+    Route::post('/koor/update/{koor}', [ApiControllerKoor::class, 'update']);
+    Route::post('/koor/delete/{koor}', [ApiControllerKoor::class, 'destroy']);
     // -----------------------------------------------------------------------------------------------------------------------------
     Route::resource('judul', ApiControllerJudul::class, ['except' => ['create', 'edit', 'update', 'destroy']]);
     Route::post('/judul/update/{judul}', [ApiControllerJudul::class, 'update']);
@@ -118,6 +136,15 @@ Route::group(['prefix'=>'v1','middleware'=>['auth:api']],function () {
     // -----------------------------------------------------------------------------------------------------------------------------
     Route::resource('sidang', 'ApiController\ApiControllerSidang', ['except' => ['create', 'edit', 'update', 'destroy']]);
     Route::post('/sidang/update/{sidang}', [ApiControllerSidang::class, 'update']);
+    Route::post('/sidang/nilai/{sidang}', [ApiControllerSidang::class, 'saveNilaiSidang']);
+    Route::get('/sidang/nilai/{sidang}', [ApiControllerSidang::class, 'getNilaiSidang']);
+    Route::post('/sidang/upload/revisi/{sidang}', [ApiControllerSidang::class, 'uploadFormRevisi']);
+    Route::post('/sidang/update/status/{sidang}', [ApiControllerSidang::class, 'updateStatusSidang']);
+    Route::post('/sidang/upload/jurnal/{sidang}', [ApiControllerSidang::class, 'uploadDraftJurnal']);
+    Route::get('/sidang/check/revisi/{sidang}', [ApiControllerSidang::class, 'checkFormRevisi']);
+    Route::get('/sidang/download/revisi/{sidang}', [ApiControllerSidang::class, 'downloadFormRevisi']);
+    Route::get('/sidang/berita_acara/{sidang}', [ApiControllerSidang::class, 'getBeritaAcara']);
+    Route::post('/sidang/review/{sidang}', [ApiControllerSidang::class, 'saveReviewSidang']);
     Route::post('/sidang/delete/{sidang}', [ApiControllerSidang::class, 'destroy']);
     Route::get('/sidang/search/all/{parameter}/{query}', [ApiControllerSidang::class, 'searchAllSidangBy']);
     Route::get('/sidang/search/all/{parameter1}/{query1}/{parameter2}/{query2}', [ApiControllerSidang::class, 'searchAllSidangByTwo']);
@@ -126,7 +153,8 @@ Route::group(['prefix'=>'v1','middleware'=>['auth:api']],function () {
     Route::post('/kategori_judul/update/{kategori_judul}', [ApiControllerKategori::class, 'update']);
     Route::post('/kategori_judul/delete/{kategori_judul}', [ApiControllerKategori::class, 'destroy']);
     // -----------------------------------------------------------------------------------------------------------------------------
-    Route::resource('jadwal_kegiatan', 'ApiController\ApiControllerKegiatan', ['except' => ['create', 'edit', 'update', 'destroy']]);
+    Route::resource('jadwal_kegiatan', ApiControllerKegiatan::class, ['except' => ['create', 'edit', 'update', 'destroy']]);
+    Route::get('/jadwal_kegiatan/{jadwal_kegiatan}',  [ApiControllerKegiatan::class, 'getByLike']);
     Route::post('/jadwal_kegiatan/update/{jadwal_kegiatan}',  [ApiControllerKegiatan::class, 'update']);
     Route::post('/jadwal_kegiatan/delete/{jadwal_kegiatan}', [ApiControllerKegiatan::class, 'destroy']);
     // -----------------------------------------------------------------------------------------------------------------------------
